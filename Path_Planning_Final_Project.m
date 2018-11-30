@@ -20,11 +20,11 @@ robot = robot_init;
 %information = i_y.*sin(i_x) - i_x .* cos(i_y);
 information = sinc(sqrt((i_x/pi).^2+(i_y/pi).^2));
 
-information = 100.*information;
+information = 10.*information;
 information(13:30,13:30) =-1.* abs(information(13:30,13:30));
 % information(12:31,12:31) =-1.* abs(information(12:31,12:31));
 %information(10:33,1:33) =-1.* abs(information(10:33,1:33));
-information = information - max(information(:));
+%information = information - max(information(:));
 figure;
 surf(i_x, i_y, information)
 
@@ -58,14 +58,13 @@ surf(i_x, i_y, information)
             max_y = max_step*sin(a);
             qpossible = [(tree{i}.p(1) + max_x); (tree{i}.p(2) + max_y)];
             
-%             [~, tix] = max(i_x(1,find(i_x(1,:)<= tree{i}.p(1))));
-%             [~, tiy] = max(i_y(1,find(i_y(1,:)<= tree{i}.p(2))));
-            [~, tix] = max(i_x(1,find(i_x(1,:)<= qpossible(1))));
-            [~, tiy] = max(i_y(1,find(i_y(1,:)<= qpossible(2))));
+            [~, tix] = max(i_x(1,find(i_x(1,:)<= tree{i}.p(1))));
+            [~, tiy] = max(i_y(1,find(i_y(1,:)<= tree{i}.p(2))));
+
             
 %             dist = norm(q - tree{i}.p) - 0.217*information(tix,tiy);%; - norm(robot_goal - tree{i}.p);
             %dist = norm(q - tree{i}.p) - information(tix,tiy);%- information(qix,qiy);
-            dist = 0.9*norm(q - tree{i}.p) - 0.1*information(tix,tiy);% + 0.3*norm(robot_goal - tree{i}.p);
+            dist = norm(q - tree{i}.p) - 0.8*information(tix,tiy);% + 0.3*norm(robot_goal - tree{i}.p);
         end
         if (dist < mindist)
             mindist = dist;
