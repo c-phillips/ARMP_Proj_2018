@@ -10,7 +10,7 @@ clc; clear all; close all;
 %% Initialize parameters
 worldsize = 100;
 gridsize = 25;          % dimension of a square gridmap
-threshold = 0.2;        % threshold for passable grid cells
+threshold = 0.05;        % threshold for passable grid cells
 
 samplesize = worldsize/gridsize;
 
@@ -76,7 +76,10 @@ normMap = normMap ./ max(normMap(:));
 normMap(normMap < threshold) = 0;
 
 figure(3)
-image(normMap.*50)  % its scaled just to see the colors
+%image(normMap.*50)  % its scaled just to see the colors
+final_map = imresize(mat2gray(normMap),15);
+imwrite(final_map, 'map.png')
+imshow(final_map)
 
 
 
