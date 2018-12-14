@@ -2,26 +2,30 @@
 clear all; clc; close all;
 
 %% Configure program parameters
-map = imread('good_map.png');
-score_map = im2double(map);
-threshold = min(map(:))+15;
-color_map = cat(3, map, map, map);
-[map_x, map_y] = size(map);
+map = imread('good_map.png');       % read in the map image file
+score_map = im2double(map);         % we need to convert the image to a numeric value
+threshold = min(map(:))+15;         % this is the threshold used for obstacle avoidance
+
+color_map = cat(3, map, map, map);  % this map is just for display purposes
+
+[map_x, map_y] = size(map);         % grabbing the size of the map
+
+% Here is where we set the main parameters:
+% alpha(1) = weighting for nearest node
+% alpha(2) = weighting for the normalized path information
+% alpha(3) = weighting for the distance from the new point to the goal
 
 % alpha = [0.1, 200, 0.05];
 alpha = [1, 0, 0];
-epsilon = 1;
+epsilon = 1;                        % the amount to step by to the next point
 capture_radius = epsilon*5;
 
-% TRIANGLE LIMITS
-% x_lim = [-2, 12];
-% y_lim = [-2, 14];
-
-% MAZE LIMITS
+% LIMITS
 x_lim = [1, map_x];
 y_lim = [1, map_y];
 sample_spacing = 1;
 
+% I pretty arbitrarily picked these:
 startpos = [5,5];
 goalpos = [310,270];
 
@@ -32,6 +36,7 @@ y_grid = y_lim(1)+epsilon:sample_spacing:y_lim(2)-epsilon;
 disp('marking obstacles')
 for i = 1:map_x
     for j = 1:map_y
+        % if the information value is below the threshold mark it red
         if(map(i,j) <= threshold)
             color_map(i,j,1) = 134;
             color_map(i,j,2) = 31;
@@ -41,27 +46,48 @@ for i = 1:map_x
 end
 
 %% Generate the tree
+% The nodes array stores all of the node positions, as well as their parents:
+% node = [parent, position[x,y]]
 nodes = [];
 nodes(1,:) = [0, startpos];
+
+% The path_info array stores all of the path information sums up to a node and its length:
+% path_info(i) = [length_to_i, info_to_i]
 path_info = [];
 path_info(1,:) = [1, score_map(startpos(2),startpos(1))];
+
 found_path = 0;
 it = 0;
 fprintf('finding path... \n\n\r')
 disp('\n\r')
 while found_path == 0
+    % This section is just to show progress
     it = it + 1;
     for i = 1:numel(num2str(it))
         fprintf('\b')
     end
     fprintf('\b\b\b\bit: %d',it)
+    
+    % We sample a new random point on the map
     v_samp = [0,0];
     v_samp(1) = datasample(x_grid,1);
     v_samp(2) = datasample(y_grid,1);
+    
+    % pos is all of the node positions for the entire tree
     pos = nodes(:,2:3);
+    
+    % in order to do the operations for all matrix entries at once, we need some large matrices of repeated values
     rep_samp = repmat(v_samp,size(pos(:,1:2),1),1);
     rep_goal = repmat(goalpos,size(pos(:,1:2),1),1);
-    diff = rep_samp-pos(:,1:2);
+    
+    diff = rep_samp-pos(:,1:2); % we use this a few times in qualities
+    
+    % This line is super long, but it performs all of the node calculations at once which is very convenient.
+    % The terms are clearly multiplied by their alpha values
+    % term1 = distance from the sampled node to all nodes in the tree
+    % term2 = normalized path length information to each node in the tree
+    % term3 = distance from what would be the new node to the goal position
+    % result_n=   a1    * dist(p_samp,p_n)   -  a2    *sum(path_info_to_n)/length    +  a3    *   dist(p_new,p_goal) where p_new = p_n+epsilon*vector_to(p_samp)
     qualities = alpha(1)*sqrt(sum(diff.^2,2))-alpha(2)*path_info(:,2)./path_info(:,1)+alpha(3)*(sqrt(sum(((pos(:,1:2)+epsilon*(diff)/norm(diff))-rep_goal).^2,2)));
     [mq, k] = min(qualities);
 %     k = dsearchn(pos, v_samp);
