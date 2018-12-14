@@ -90,7 +90,6 @@ while found_path == 0
     % result_n=   a1    * dist(p_samp,p_n)   -  a2    *sum(path_info_to_n)/length    +  a3    *   dist(p_new,p_goal) where p_new = p_n+epsilon*vector_to(p_samp)
     qualities = alpha(1)*sqrt(sum(diff.^2,2))-alpha(2)*path_info(:,2)./path_info(:,1)+alpha(3)*(sqrt(sum(((pos(:,1:2)+epsilon*(diff)/norm(diff))-rep_goal).^2,2)));
     [mq, k] = min(qualities);
-%     k = dsearchn(pos, v_samp);
     
     samp_dist = sqrt((v_samp(1)-pos(k,1))^2+(v_samp(2)-pos(k,2))^2);
     
@@ -106,7 +105,6 @@ while found_path == 0
         v_new = round(pos(k,:)+epsilon*vec);
 %     end
 
-    % collision checking
     in = 0;
     if(map(v_new(2),v_new(1)) <= threshold)
         in = 1;
@@ -117,17 +115,6 @@ while found_path == 0
             in = 1;
         end
     end
-%     for j = 1:length(polys)
-%         in = inpolygon(v_new(1),v_new(2), polys{j}(1,:), polys{j}(2,:));
-%         if(in > 0)
-%             break
-%         end
-%         [xi, yi] = polyxpoly([pos(k,1);v_new(1)],[pos(k,2);v_new(2)],polys{j}(1,:), polys{j}(2,:));
-%         if(~isempty(xi))
-%             in = 1;
-%             break
-%         end
-%     end
     if(in > 0)
         continue          
     else        
@@ -164,13 +151,7 @@ path_length = length(path)-1
 
 %% Plot the space, tree, and path
 imshow(color_map)
-% axis('equal')
-% xlim(x_lim)
-% ylim(y_lim)
 hold on
-% for i = 1:length(polys)
-%     fill(polys{i}(1,:), polys{i}(2,:), 'b')
-% end
 scatter_nodes = nodes;
 scatter_nodes(path(1:end-1)) = [];
 scatter(scatter_nodes(:,2),scatter_nodes(:,3),'.','MarkerEdgeColor','k')
